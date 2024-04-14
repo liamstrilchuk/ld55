@@ -1,0 +1,8 @@
+* "Blood God" demands sacrifices every day; if they are not met, enemies are summoned
+* enemies are spawned at night, and attempt to destroy your temple
+* these sacrifices consist of coloured flowers in an otherwise colourless world
+* can build defenses, such as walls and turrets, using resources
+* survive as long as you can, die when temple is destroyed
+
+* lightning?
+* lakes?
