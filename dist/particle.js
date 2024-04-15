@@ -78,26 +78,27 @@ var Blood = /** @class */ (function (_super) {
         return false;
     };
     Blood.prototype.render = function () {
-        this.game.ctx.fillStyle = "rgb(255, 50, 50)";
+        this.game.ctx.fillStyle = "rgb(200, 70, 70)";
         this.game.ctx.fillRect(this.x - this.game.relativeX - 3, this.y - this.game.relativeY - 3, 6, 6);
     };
     return Blood;
 }(Particle));
 var FontParticle = /** @class */ (function (_super) {
     __extends(FontParticle, _super);
-    function FontParticle() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
+    function FontParticle(x, y, velX, velY, size, game, color) {
+        var _this = _super.call(this, x, y, velX, velY, game, color) || this;
         _this.framesLived = 0;
         _this.hasUpdated = false;
         _this.framesOnGround = 0;
         _this.fadeAfter = 0;
+        _this.size = size;
         return _this;
     }
     FontParticle.prototype.update = function (delta) {
         this.framesLived += 1;
         if (this.framesLived <= 60) {
-            this.x = this.startX + (this.endX - this.startX) * Math.min(this.framesLived, 60) / 60;
-            this.y = this.startY + (this.endY - this.startY) * Math.min(this.framesLived, 60) / 60;
+            this.x = this.startX + (this.endX - this.startX) * Math.min(this.framesLived, 30) / 30;
+            this.y = this.startY + (this.endY - this.startY) * Math.min(this.framesLived, 30) / 30;
         }
         if (this.framesLived > 120 + this.fadeAfter) {
             if (!this.hasUpdated) {
@@ -121,8 +122,8 @@ var FontParticle = /** @class */ (function (_super) {
         return false;
     };
     FontParticle.prototype.render = function () {
-        this.game.ctx.fillStyle = "rgb(70, 70, 70)";
-        this.game.ctx.fillRect(this.x - this.game.relativeX - 5, this.y - this.game.relativeY - 5, 11, 11);
+        this.game.ctx.fillStyle = this.color;
+        this.game.ctx.fillRect(this.x - this.game.relativeX - this.size / 2, this.y - this.game.relativeY - this.size / 2, this.size + 1, this.size + 1);
     };
     return FontParticle;
 }(Particle));

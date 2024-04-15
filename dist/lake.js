@@ -27,7 +27,7 @@ var Lake = /** @class */ (function () {
         }
         for (var i = startChunk.trees.length - 1; i > -1; i--) {
             var tree = startChunk.trees[i];
-            if (tree.x >= this.from && tree.x <= this.to) {
+            if (tree.x + 20 >= this.from && tree.x - 20 <= this.to) {
                 startChunk.trees.splice(i, 1);
             }
         }
@@ -40,7 +40,7 @@ var Lake = /** @class */ (function () {
             }
             for (var i = endChunk.trees.length - 1; i > -1; i--) {
                 var tree = endChunk.trees[i];
-                if (tree.x >= this.from && tree.x <= this.to) {
+                if (tree.x + 20 >= this.from && tree.x - 20 <= this.to) {
                     endChunk.trees.splice(i, 1);
                 }
             }

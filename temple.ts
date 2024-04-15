@@ -16,7 +16,6 @@ class Temple {
 
 		if (this.spawnTimer <= 0 && this.blood > 100) {
 			this.spawnTimer = 600;
-			this.blood -= 100;
 			this.game.robots.push(new Robot(this.x, this.y - 200, this.game));
 		}
 	}

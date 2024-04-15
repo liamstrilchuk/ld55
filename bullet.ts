@@ -4,8 +4,8 @@ class Bullet {
 	public velX: number;
 	public velY: number;
 	public drop: number;
-	private game: Game;
-	private enemiesHit: (Enemy | Animal)[] = [];
+	public game: Game;
+	public enemiesHit: (Enemy | Animal)[] = [];
 
 	constructor(x: number, y: number, velX: number, velY: number, drop: number, game: Game) {
 		this.x = x;
@@ -60,5 +60,36 @@ class Bullet {
 		this.game.ctx.rotate(Math.atan2(this.velY, this.velX));
 		this.game.ctx.fillRect(-15, -2, 30, 4);
 		this.game.ctx.restore();
+	}
+}
+
+class EnemyBullet extends Bullet {
+	public update(delta: number): boolean {
+		this.x += this.velX * delta;
+		this.y += this.velY * delta;
+
+		this.velY += this.drop * delta;
+
+		if (this.y > this.game.world.getHeightAtPos(this.x)) {
+			return true;
+		}
+
+		let hasHit = false;
+		this.game.structures.forEach((structure) => {
+			if (Math.abs(structure.x - this.x) > 50) {
+				return;
+			}
+
+			for (let i = structure.pieces.length - 1; i > -1; i--) {
+				const piece = structure.pieces[i];
+				if (Math.sqrt((piece.x + 2 - this.x) ** 2 + (piece.y + 2 - this.y) ** 2) < 15) {
+					this.game.particles.push(new Particle(piece.x, piece.y, Math.random() - 0.5, -Math.random(), this.game, structure.pieces[i].color));
+					structure.pieces.splice(i, 1);
+					hasHit = true;
+				}
+			}
+		});
+
+		return hasHit;
 	}
 }

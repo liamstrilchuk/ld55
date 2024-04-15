@@ -379,14 +379,115 @@ var letters = {
         "        "
     ]
 };
+var numbers = {
+    "0": [
+        " 000 ",
+        "0   0",
+        "0   0",
+        "0   0",
+        "0   0",
+        "0   0",
+        " 000 "
+    ],
+    "1": [
+        " 1 ",
+        "11 ",
+        " 1 ",
+        " 1 ",
+        " 1 ",
+        " 1 ",
+        "111"
+    ],
+    "2": [
+        " 222 ",
+        "2   2",
+        "    2",
+        "   2 ",
+        "  2  ",
+        " 2   ",
+        "22222"
+    ],
+    "3": [
+        " 333 ",
+        "3   3",
+        "    3",
+        "  33 ",
+        "    3",
+        "3   3",
+        " 333 "
+    ],
+    "4": [
+        "   4 ",
+        "  44 ",
+        " 4 4 ",
+        "4  4 ",
+        "44444",
+        "   4 ",
+        "   4 "
+    ],
+    "5": [
+        "55555",
+        "5    ",
+        "5    ",
+        "5555 ",
+        "    5",
+        "5   5",
+        " 555 "
+    ],
+    "6": [
+        " 666 ",
+        "6    ",
+        "6    ",
+        "6666 ",
+        "6   6",
+        "6   6",
+        " 666 "
+    ],
+    "7": [
+        "77777",
+        "    7",
+        "   7 ",
+        "  7  ",
+        " 7   ",
+        "7    ",
+        "7    "
+    ],
+    "8": [
+        " 888 ",
+        "8   8",
+        "8   8",
+        " 888 ",
+        "8   8",
+        "8   8",
+        " 888 "
+    ],
+    "9": [
+        " 999 ",
+        "9   9",
+        "9   9",
+        " 9999",
+        "    9",
+        "    9",
+        " 999 "
+    ],
+    ":": [
+        "    ",
+        " 00 ",
+        " 00 ",
+        "    ",
+        " 00 ",
+        " 00 ",
+        "    "
+    ]
+};
 var Message = /** @class */ (function () {
-    function Message(message, game) {
+    function Message(message, xPos, yPos, size, color, game) {
         this.tiles = [];
         this.message = message;
         this.game = game;
-        this.createTiles();
+        this.createTiles(xPos, yPos, size, color);
     }
-    Message.prototype.createTiles = function () {
+    Message.prototype.createTiles = function (xPos, yPos, size, color) {
         for (var i = 0; i < this.message.length; i++) {
             var fontLetter = letters[this.message[i].toUpperCase()];
             while (this.tiles.length < fontLetter.length) {
@@ -396,12 +497,12 @@ var Message = /** @class */ (function () {
                 for (var col = 0; col < fontLetter[row].length; col++) {
                     this.tiles[row].push(fontLetter[row][col] === " " ? 0 : 1);
                     if (fontLetter[row][col] !== " ") {
-                        var particle = new FontParticle(col, row, 0, 0, this.game);
-                        particle.startX = this.tiles[row].length * 10 + Math.random() * 500 - 250;
-                        particle.startY = row * 10 - 500 + Math.random() * 500 - 250;
-                        particle.endY = row * 10 - 500;
-                        particle.endX = this.tiles[row].length * 10;
-                        particle.fadeAfter = (this.tiles[row].length * 10 + row * 10) / 3;
+                        var particle = new FontParticle(col, row, 0, 0, size, this.game, color);
+                        particle.startX = this.tiles[row].length * size + Math.random() * 300 - 150 + xPos;
+                        particle.startY = row * size - yPos + Math.random() * 300 - 150;
+                        particle.endY = row * size - yPos;
+                        particle.endX = this.tiles[row].length * size + xPos;
+                        particle.fadeAfter = (this.tiles[row].length * size + row * size) / 3;
                         this.game.particles.push(particle);
                     }
                 }

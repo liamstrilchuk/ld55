@@ -34,6 +34,7 @@ class Robot {
 		this.game.ctx.fillRect(this.x - this.game.relativeX - 10, this.y - this.game.relativeY - 10, 20, 20);
 
 		if (this.modeChangeTimer > 0) {
+			this.game.ctx.font = "12px Times";
 			this.game.ctx.textAlign = "center";
 			this.game.ctx.fillText(this.mode, this.x - this.game.relativeX, this.y - this.game.relativeY - 20);
 		}

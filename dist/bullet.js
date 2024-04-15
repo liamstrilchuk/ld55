@@ -1,3 +1,18 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
         if (ar || !(i in from)) {
@@ -60,3 +75,34 @@ var Bullet = /** @class */ (function () {
     };
     return Bullet;
 }());
+var EnemyBullet = /** @class */ (function (_super) {
+    __extends(EnemyBullet, _super);
+    function EnemyBullet() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    EnemyBullet.prototype.update = function (delta) {
+        var _this = this;
+        this.x += this.velX * delta;
+        this.y += this.velY * delta;
+        this.velY += this.drop * delta;
+        if (this.y > this.game.world.getHeightAtPos(this.x)) {
+            return true;
+        }
+        var hasHit = false;
+        this.game.structures.forEach(function (structure) {
+            if (Math.abs(structure.x - _this.x) > 50) {
+                return;
+            }
+            for (var i = structure.pieces.length - 1; i > -1; i--) {
+                var piece = structure.pieces[i];
+                if (Math.sqrt(Math.pow((piece.x + 2 - _this.x), 2) + Math.pow((piece.y + 2 - _this.y), 2)) < 15) {
+                    _this.game.particles.push(new Particle(piece.x, piece.y, Math.random() - 0.5, -Math.random(), _this.game, structure.pieces[i].color));
+                    structure.pieces.splice(i, 1);
+                    hasHit = true;
+                }
+            }
+        });
+        return hasHit;
+    };
+    return EnemyBullet;
+}(Bullet));

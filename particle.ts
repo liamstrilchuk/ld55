@@ -78,7 +78,7 @@ class Blood extends Particle {
 	}
 
 	public render(): void {
-		this.game.ctx.fillStyle = "rgb(255, 50, 50)";
+		this.game.ctx.fillStyle = "rgb(200, 70, 70)";
 		this.game.ctx.fillRect(this.x - this.game.relativeX - 3, this.y - this.game.relativeY - 3, 6, 6);
 	}
 }
@@ -92,12 +92,19 @@ class FontParticle extends Particle {
 	private hasUpdated: boolean = false;
 	private framesOnGround: number = 0;
 	public fadeAfter: number = 0;
+	public size: number;
+
+	constructor(x: number, y: number, velX: number, velY: number, size: number, game: Game, color?: string) {
+		super(x, y, velX, velY, game, color);
+
+		this.size = size;
+	}
 
 	public update(delta: number): boolean {
 		this.framesLived += 1;
 		if (this.framesLived <= 60) {
-			this.x = this.startX + (this.endX - this.startX) * Math.min(this.framesLived, 60) / 60;
-			this.y = this.startY + (this.endY - this.startY) * Math.min(this.framesLived, 60) / 60;
+			this.x = this.startX + (this.endX - this.startX) * Math.min(this.framesLived, 30) / 30;
+			this.y = this.startY + (this.endY - this.startY) * Math.min(this.framesLived, 30) / 30;
 		}
 
 		if (this.framesLived > 120 + this.fadeAfter) {
@@ -126,7 +133,7 @@ class FontParticle extends Particle {
 	}
 
 	public render(): void {
-		this.game.ctx.fillStyle = "rgb(70, 70, 70)";
-		this.game.ctx.fillRect(this.x - this.game.relativeX - 5, this.y - this.game.relativeY - 5, 11, 11);
+		this.game.ctx.fillStyle = this.color;
+		this.game.ctx.fillRect(this.x - this.game.relativeX - this.size / 2, this.y - this.game.relativeY - this.size / 2, this.size + 1, this.size + 1);
 	}
 }

@@ -21,6 +21,13 @@ class Game {
 	public enemies: Enemy[] = [];
 	public robots: Robot[] = [];
 	public animals: Animal[] = [];
+	public structures: Wall[] = [];
+
+	public buildMenuOpen: boolean = false;
+	public selectedStructure: typeof Wall;
+	public wave: number = 1;
+	public score: number = 0;
+	public waveTimer: number = 3600;
 
 	constructor(ctx: CanvasRenderingContext2D) {
 		this.ctx = ctx;
@@ -32,11 +39,11 @@ class Game {
 
 		this.player = new Player(0, this.world.getHeightAtPos(0), this);
 		this.temple = new Temple(-100, this.world.getHeightAtPos(-100) - 70, this);
-		new Message("start game", this);
+		new Message("start game", 0, 300, 5, "rgb(200, 70, 70)", this);
 
-		for (let i = 0; i < 10; i++) {
-			this.enemies.push(new Enemy(100 + 50 * i, this.world.getHeightAtPos(100 + 50 * i), this));
-		}
+		// for (let i = 0; i < 10; i++) {
+		// 	this.enemies.push(new Enemy(100 + 50 * i, this.world.getHeightAtPos(100 + 50 * i), this));
+		// }
 
 		for (let i = 0; i < 15; i++) {
 			const x = Math.random() * 5000 - 2500;
@@ -101,6 +108,19 @@ class Game {
 			}
 		});
 
+		this.structures.forEach((structure) => {
+			if (structure.update()) {
+				this.structures.splice(this.structures.indexOf(structure), 1);
+			}
+		});
+
+		this.waveTimer -= delta;
+
+		if (this.waveTimer <= 0) {
+			this.wave++;
+			this.waveTimer = 3600;
+		}
+
 		this.temple.update(delta);
 		this.render();
 
@@ -115,16 +135,8 @@ class Game {
 		this.temple.render();
 		this.player.render();
 
-		this.bullets.forEach((bullet) => {
-			bullet.render();
-		});
-
 		this.robots.forEach((robot) => {
 			robot.render();
-		});
-
-		this.particles.forEach((particle) => {
-			particle.render();
 		});
 
 		this.enemies.forEach((enemy) => {
@@ -135,14 +147,115 @@ class Game {
 			animal.render();
 		});
 
+		this.structures.forEach((structure) => {
+			structure.render();
+		});
+
+		this.bullets.forEach((bullet) => {
+			bullet.render();
+		});
+
+		this.particles.forEach((particle) => {
+			particle.render();
+		});
+
+		if (this.buildMenuOpen) {
+			this.ctx.strokeStyle = "rgb(100, 100, 100)";
+			this.ctx.lineWidth = 8;
+			this.ctx.beginPath();
+			this.ctx.arc(this.ctx.canvas.width / 2, this.ctx.canvas.height * 2/3 - 20, 100, 0, Math.PI * 2);
+			this.ctx.stroke();
+
+			const dist = Math.sqrt(
+				(this.mousePos.x - (this.ctx.canvas.width / 2 - 100)) ** 2 +
+				(this.mousePos.y - this.ctx.canvas.height * 2/3 + 20) ** 2
+			);
+
+			this.ctx.fillStyle = "rgb(90, 90, 90)";
+			this.ctx.beginPath();
+			this.ctx.arc(this.ctx.canvas.width / 2 - 100, this.ctx.canvas.height * 2/3 - 20, dist < 25 ? 30 : 25, 0, Math.PI * 2);
+			this.ctx.fill();
+
+			if (dist < 25) {
+				const color = this.temple.blood >= 50 ? "rgb(70, 200, 70)" : "rgb(200, 70, 70)";
+				this.drawNumber("50", this.ctx.canvas.width / 2 - 115, this.ctx.canvas.height * 2/3 - 30, color, 3);
+			}
+		}
+
+		if (this.selectedStructure) {
+			const mouseX = this.getMouseTileX();
+			const height = this.world.getHeightAtPos(mouseX);
+			const canPlace = this.canPlaceStructure(mouseX);
+
+			this.ctx.fillStyle = `rgba(70, 70, 70, ${canPlace ? 0.7 : 0.3})`;
+			this.ctx.fillRect(
+				mouseX - this.relativeX,
+				height - this.relativeY - this.selectedStructure.height,
+				this.selectedStructure.width,
+				this.selectedStructure.height
+			);
+		}
+
+		this.drawNumber(this.temple.blood.toString(), 10, 20, "rgb(200, 70, 70)", 5);
+
+		this.ctx.font = "12px Times";
 		this.ctx.fillStyle = "black";
-		this.ctx.textAlign = "left";
 		this.ctx.fillText("FPS: " + Math.round(1000 * 60 / (this.lastFrameTimes[this.lastFrameTimes.length - 1] - this.lastFrameTimes[0])), 10, 10);
+
+		this.ctx.textAlign = "center";
+		this.ctx.font = "bold 50px Courier";
+		this.ctx.fillStyle = "black";
+		this.ctx.fillText("Wave " + this.wave, this.ctx.canvas.width / 2, 50);
+
+		const minutes = Math.floor(this.waveTimer / 3600);
+		const seconds = Math.floor((this.waveTimer % 3600) / 60);
+
+		this.ctx.font = "bold 30px Courier";
+		this.ctx.fillStyle = "rgb(90, 40, 40)";
+		this.ctx.fillText(`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`, this.ctx.canvas.width / 2, 85);
+	}
+
+	private drawNumber(text: string, x: number, y: number, color: string, size: number): void {
+		this.ctx.fillStyle = color;
+		let column = 0;
+		for (let char of text) {
+			for (let row = 0; row < numbers[char].length; row++) {
+				for (let col = 0; col < numbers[char][row].length; col++) {
+					if (numbers[char][row][col] !== " ") {
+						this.ctx.fillRect(x + column * size + col * size, y + row * size, size, size);
+					}
+				}
+			}
+			column += numbers[char][0].length + 1;
+		}
+	}
+
+	private getMouseTileX(): number {
+		return Math.floor((this.mousePos.x + this.relativeX) / 4) * 4 - Math.floor(this.selectedStructure.width / 4) * 2;
+	}
+
+	private canPlaceStructure(xPos: number): boolean {
+		let structureInWay = false;
+		this.structures.forEach((structure) => {
+			if (Math.abs(structure.x - xPos) < 50) {
+				structureInWay = true;
+			}
+		});
+
+		return Math.abs(xPos - this.relativeX - this.ctx.canvas.width / 2) < 300 && !structureInWay;
 	}
 
 	private addEventListeners() {
 		window.addEventListener("keydown", (event: KeyboardEvent) => {
 			this.keys[event.key.toLowerCase()] = true;
+
+			if (event.key.toLowerCase() === "e") {
+				if (this.selectedStructure) {
+					this.selectedStructure = null;
+				} else {
+					this.buildMenuOpen = !this.buildMenuOpen;
+				}
+			}
 		});
 
 		window.addEventListener("keyup", (event: KeyboardEvent) => {
@@ -164,6 +277,37 @@ class Game {
 	}
 
 	private onMouseDown(): void {
+		if (this.selectedStructure) {
+			const mouseX = this.getMouseTileX();
+			const height = this.world.getHeightAtPos(mouseX);
+			const canPlace = this.canPlaceStructure(mouseX);
+
+			if (canPlace) {
+				if (this.temple.blood >= this.selectedStructure.cost) {
+					this.structures.push(new this.selectedStructure(mouseX, height, this));
+					this.temple.blood -= this.selectedStructure.cost;
+					this.selectedStructure = null;
+				} else {
+					new Message("not enough blood", this.player.x - 200, 150, 2, "rgb(200, 70, 70)", this);
+				}
+			}
+			return;
+		}
+
+		if (this.buildMenuOpen) {
+			const dist1 = Math.sqrt(
+				(this.mousePos.x - (this.ctx.canvas.width / 2 - 100)) ** 2 +
+				(this.mousePos.y - this.ctx.canvas.height * 2/3 + 20) ** 2
+			);
+
+			if (dist1 < 25) {
+				this.selectedStructure = Wall;
+				this.buildMenuOpen = false;
+			}
+
+			return;
+		}
+
 		this.robots.forEach((robot) => {
 			if (Math.abs(robot.x - this.mousePos.x - this.relativeX) < 30 && Math.abs(robot.y - this.mousePos.y - this.relativeY) < 30) {
 				robot.mode = robot.mode === "patrol" ? "follow" : "patrol";
