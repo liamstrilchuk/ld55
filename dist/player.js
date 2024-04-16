@@ -16,6 +16,7 @@ var Player = /** @class */ (function () {
         this.framesSinceSwimming = 0;
         this.lastDir = "right";
         this.health = 100;
+        this.sinceLastShot = 0;
         this.x = x;
         this.y = y;
         this.game = game;
@@ -33,6 +34,7 @@ var Player = /** @class */ (function () {
     };
     Player.prototype.update = function (delta) {
         var _this = this;
+        this.sinceLastShot -= delta;
         var swimming = false;
         var lakeHeight = null;
         __spreadArray(__spreadArray([], this.game.world.getChunkAtPos(this.x).lakes, true), this.game.world.getChunkAtPos(this.x - 600).lakes, true).forEach(function (lake) {
@@ -77,10 +79,11 @@ var Player = /** @class */ (function () {
         if (this.game.mouseDown) {
             this.holdingTime += delta;
         }
-        if (this.wasHoldingLastFrame && !this.game.mouseDown) {
+        if (this.wasHoldingLastFrame && !this.game.mouseDown && this.sinceLastShot <= 0) {
             var dir = Math.atan2(this.game.mousePos.y - this.y + this.game.relativeY, this.game.mousePos.x - this.x + this.game.relativeX);
             this.game.bullets.push(new Bullet(this.x, this.y - 30, Math.cos(dir) * Math.min(this.holdingTime + 15, 40) / 2, Math.sin(dir) * Math.min(this.holdingTime + 15, 40) / 2, 0.1, this.game));
             this.holdingTime = 0;
+            this.sinceLastShot = 15;
         }
         if (this.wasHoldingLastFrame && !this.game.mouseDown) {
             this.holdingTime = 0;

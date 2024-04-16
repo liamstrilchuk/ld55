@@ -12,6 +12,7 @@ class Player {
 	public assets: { [key: string]: HTMLImageElement[] };
 	public lastDir: string = "right";
 	public health: number = 100;
+	public sinceLastShot: number = 0;
 
 	constructor(x: number, y: number, game: Game) {
 		this.x = x;
@@ -33,6 +34,7 @@ class Player {
 	}
 
 	public update(delta: number) {
+		this.sinceLastShot -= delta;
 		let swimming = false;
 		let lakeHeight = null;
 
@@ -86,7 +88,7 @@ class Player {
 			this.holdingTime += delta;
 		}
 
-		if (this.wasHoldingLastFrame && !this.game.mouseDown) {
+		if (this.wasHoldingLastFrame && !this.game.mouseDown && this.sinceLastShot <= 0) {
 			const dir = Math.atan2(this.game.mousePos.y - this.y + this.game.relativeY, this.game.mousePos.x - this.x + this.game.relativeX);
 			this.game.bullets.push(new Bullet(
 				this.x, this.y - 30,
@@ -95,6 +97,7 @@ class Player {
 				0.1, this.game
 			));
 			this.holdingTime = 0;
+			this.sinceLastShot = 15;
 		}
 
 		if (this.wasHoldingLastFrame && !this.game.mouseDown) {
