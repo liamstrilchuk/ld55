@@ -19,21 +19,22 @@ var Game = /** @class */ (function () {
         this.wave = 1;
         this.score = 0;
         this.waveTimer = 3600;
+        this.started = false;
+        this.gameOver = false;
         this.ctx = ctx;
         this.world = new World(this);
         for (var pos in this.world.chunks) {
             this.world.chunks[pos].lakes.forEach(function (lake) { return lake.createLake(); });
         }
-        this.player = new Player(0, this.world.getHeightAtPos(0), this);
-        this.temple = new Temple(-100, this.world.getHeightAtPos(-100) - 70, this);
-        new Message("start game", 0, 300, 5, "rgb(200, 70, 70)", this);
-        // for (let i = 0; i < 10; i++) {
-        // 	this.enemies.push(new Enemy(100 + 50 * i, this.world.getHeightAtPos(100 + 50 * i), this));
-        // }
-        for (var i = 0; i < 15; i++) {
-            var x = Math.random() * 5000 - 2500;
+        this.player = new Player(0, -200, this);
+        this.temple = new Temple(0, this.world.getHeightAtPos(0) - 70, this);
+        new Message("the blood temple", -470, 500, 5, "rgb(120, 60, 60)", this);
+        new Message("press any key to start", -350, 370, 3, "rgb(60, 60, 60)", this);
+        for (var i = 0; i < 25; i++) {
+            var x = Math.random() * 10000 - 5000;
             this.animals.push(new Animal(x, this.world.getHeightAtPos(x), this));
         }
+        this.bloodImage = loadImage("assets/blood.png");
     }
     Game.prototype.update = function () {
         var _this = this;
@@ -44,7 +45,6 @@ var Game = /** @class */ (function () {
             this.lastFrameTimes.shift();
         }
         var delta = diff / (1000 / 60);
-        this.player.update(delta);
         this.lastXPositions.push(this.player.x);
         this.lastYPositions.push(this.player.y);
         if (this.lastXPositions.length > 15) {
@@ -57,6 +57,17 @@ var Game = /** @class */ (function () {
         var yAvg = this.lastYPositions.reduce(function (a, b) { return a + b; }) / this.lastYPositions.length;
         this.relativeX = Math.floor(xAvg - this.ctx.canvas.width / 2);
         this.relativeY = Math.floor(yAvg - this.ctx.canvas.height * 2 / 3);
+        if (!this.started || this.gameOver) {
+            this.particles.forEach(function (particle) {
+                if (particle.update(delta)) {
+                    _this.particles.splice(_this.particles.indexOf(particle), 1);
+                }
+            });
+            this.render();
+            requestAnimationFrame(this.update.bind(this));
+            return;
+        }
+        this.player.update(delta);
         this.bullets.forEach(function (bullet) {
             if (bullet.update(delta)) {
                 _this.bullets.splice(_this.bullets.indexOf(bullet), 1);
@@ -91,6 +102,17 @@ var Game = /** @class */ (function () {
         if (this.waveTimer <= 0) {
             this.wave++;
             this.waveTimer = 3600;
+            for (var i = 0; i < this.wave; i++) {
+                var randX = void 0;
+                do {
+                    randX = Math.random() * 5000 - 2500;
+                } while (Math.abs(randX) < 1500);
+                this.enemies.push(new Enemy(randX, this.world.getHeightAtPos(randX), this));
+            }
+        }
+        if (this.temple.blood <= -30 && !this.gameOver) {
+            this.gameOver = true;
+            new Message("game over", -300 + this.player.x, 150, 5, "rgb(200, 70, 70)", this);
         }
         this.temple.update(delta);
         this.render();
@@ -121,7 +143,7 @@ var Game = /** @class */ (function () {
         this.particles.forEach(function (particle) {
             particle.render();
         });
-        if (this.buildMenuOpen) {
+        if (this.buildMenuOpen && this.started && !this.gameOver) {
             this.ctx.strokeStyle = "rgb(100, 100, 100)";
             this.ctx.lineWidth = 8;
             this.ctx.beginPath();
@@ -137,6 +159,28 @@ var Game = /** @class */ (function () {
                 var color = this.temple.blood >= 50 ? "rgb(70, 200, 70)" : "rgb(200, 70, 70)";
                 this.drawNumber("50", this.ctx.canvas.width / 2 - 115, this.ctx.canvas.height * 2 / 3 - 30, color, 3);
             }
+            else {
+                this.ctx.fillStyle = "rgb(200, 200, 200)";
+                this.ctx.font = "15px Arial";
+                this.ctx.textAlign = "center";
+                this.ctx.fillText("wall", this.ctx.canvas.width / 2 - 100, this.ctx.canvas.height * 2 / 3 - 15);
+            }
+            var dist2 = Math.sqrt(Math.pow((this.mousePos.x - (this.ctx.canvas.width / 2 + 100)), 2) +
+                Math.pow((this.mousePos.y - this.ctx.canvas.height * 2 / 3 + 20), 2));
+            this.ctx.fillStyle = "rgb(90, 90, 90)";
+            this.ctx.beginPath();
+            this.ctx.arc(this.ctx.canvas.width / 2 + 100, this.ctx.canvas.height * 2 / 3 - 20, dist2 < 25 ? 30 : 25, 0, Math.PI * 2);
+            this.ctx.fill();
+            if (dist2 < 25) {
+                var color = this.temple.blood >= 100 ? "rgb(70, 200, 70)" : "rgb(200, 70, 70)";
+                this.drawNumber("100", this.ctx.canvas.width / 2 + 78, this.ctx.canvas.height * 2 / 3 - 30, color, 3);
+            }
+            else {
+                this.ctx.fillStyle = "rgb(200, 200, 200)";
+                this.ctx.font = "15px Arial";
+                this.ctx.textAlign = "center";
+                this.ctx.fillText("turret", this.ctx.canvas.width / 2 + 100, this.ctx.canvas.height * 2 / 3 - 15);
+            }
         }
         if (this.selectedStructure) {
             var mouseX = this.getMouseTileX();
@@ -145,19 +189,19 @@ var Game = /** @class */ (function () {
             this.ctx.fillStyle = "rgba(70, 70, 70, " + (canPlace ? 0.7 : 0.3) + ")";
             this.ctx.fillRect(mouseX - this.relativeX, height - this.relativeY - this.selectedStructure.height, this.selectedStructure.width, this.selectedStructure.height);
         }
-        this.drawNumber(this.temple.blood.toString(), 10, 20, "rgb(200, 70, 70)", 5);
-        this.ctx.font = "12px Times";
-        this.ctx.fillStyle = "black";
-        this.ctx.fillText("FPS: " + Math.round(1000 * 60 / (this.lastFrameTimes[this.lastFrameTimes.length - 1] - this.lastFrameTimes[0])), 10, 10);
-        this.ctx.textAlign = "center";
-        this.ctx.font = "bold 50px Courier";
-        this.ctx.fillStyle = "black";
-        this.ctx.fillText("Wave " + this.wave, this.ctx.canvas.width / 2, 50);
-        var minutes = Math.floor(this.waveTimer / 3600);
-        var seconds = Math.floor((this.waveTimer % 3600) / 60);
-        this.ctx.font = "bold 30px Courier";
-        this.ctx.fillStyle = "rgb(90, 40, 40)";
-        this.ctx.fillText(minutes + ":" + (seconds < 10 ? "0" : "") + seconds, this.ctx.canvas.width / 2, 85);
+        if (this.started && !this.gameOver) {
+            this.ctx.drawImage(this.bloodImage, 10, 10, 44, 64);
+            this.drawNumber(Math.max(this.temple.blood, 0).toString(), 70, 25, "rgb(200, 70, 70)", 5);
+            this.ctx.textAlign = "center";
+            this.ctx.font = "bold 50px Courier";
+            this.ctx.fillStyle = "black";
+            this.ctx.fillText("Wave " + this.wave, this.ctx.canvas.width / 2, 50);
+            var minutes = Math.floor(this.waveTimer / 3600);
+            var seconds = Math.floor((this.waveTimer % 3600) / 60);
+            this.ctx.font = "bold 30px Courier";
+            this.ctx.fillStyle = "rgb(90, 40, 40)";
+            this.ctx.fillText(minutes + ":" + (seconds < 10 ? "0" : "") + seconds, this.ctx.canvas.width / 2, 85);
+        }
     };
     Game.prototype.drawNumber = function (text, x, y, color, size) {
         this.ctx.fillStyle = color;
@@ -190,6 +234,10 @@ var Game = /** @class */ (function () {
         var _this = this;
         window.addEventListener("keydown", function (event) {
             _this.keys[event.key.toLowerCase()] = true;
+            if (!_this.started) {
+                _this.started = true;
+                return;
+            }
             if (event.key.toLowerCase() === "e") {
                 if (_this.selectedStructure) {
                     _this.selectedStructure = null;
@@ -221,7 +269,13 @@ var Game = /** @class */ (function () {
             var canPlace = this.canPlaceStructure(mouseX);
             if (canPlace) {
                 if (this.temple.blood >= this.selectedStructure.cost) {
-                    this.structures.push(new this.selectedStructure(mouseX, height, this));
+                    if (this.selectedStructure === Wall) {
+                        this.structures.push(new this.selectedStructure(mouseX, height, this));
+                    }
+                    else {
+                        var turret = new this.selectedStructure(mouseX, height, this);
+                        this.structures.push(turret);
+                    }
                     this.temple.blood -= this.selectedStructure.cost;
                     this.selectedStructure = null;
                 }
@@ -236,6 +290,12 @@ var Game = /** @class */ (function () {
                 Math.pow((this.mousePos.y - this.ctx.canvas.height * 2 / 3 + 20), 2));
             if (dist1 < 25) {
                 this.selectedStructure = Wall;
+                this.buildMenuOpen = false;
+            }
+            var dist2 = Math.sqrt(Math.pow((this.mousePos.x - (this.ctx.canvas.width / 2 + 100)), 2) +
+                Math.pow((this.mousePos.y - this.ctx.canvas.height * 2 / 3 + 20), 2));
+            if (dist2 < 25) {
+                this.selectedStructure = Turret;
                 this.buildMenuOpen = false;
             }
             return;

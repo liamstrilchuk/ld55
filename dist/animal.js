@@ -14,9 +14,14 @@ var Animal = /** @class */ (function () {
         this.targetTime = 0;
         this.targetX = 0;
         this.health = 20;
+        this.lastDir = Math.random() < 0.5 ? "left" : "right";
         this.x = x;
         this.y = y;
         this.game = game;
+        this.assets = {
+            "left": loadImage("assets/animal1.png"),
+            "right": loadImage("assets/animal2.png")
+        };
     }
     Animal.prototype.update = function (delta) {
         var _this = this;
@@ -39,9 +44,11 @@ var Animal = /** @class */ (function () {
         var isInLake = lakeHeight !== null && Math.abs(lakeHeight - this.y) < 10;
         if (this.targetX < this.x) {
             this.x -= (isInLake ? 1 : 2) * delta;
+            this.lastDir = "left";
         }
         if (this.targetX > this.x) {
             this.x += (isInLake ? 1 : 2) * delta;
+            this.lastDir = "right";
         }
         if ((!swimming && isInLake && this.framesSinceSwimming < 5) || swimming && this.framesSinceSwimming > 10) {
             for (var i = 0; i < 3; i++) {
@@ -67,8 +74,7 @@ var Animal = /** @class */ (function () {
         return false;
     };
     Animal.prototype.render = function () {
-        this.game.ctx.fillStyle = "rgb(70, 70, 70)";
-        this.game.ctx.fillRect(this.x - this.game.relativeX - 20, this.y - this.game.relativeY - 20, 40, 20);
+        this.game.ctx.drawImage(this.assets[this.lastDir], this.x - this.game.relativeX - 24 * 1.5, this.y - this.game.relativeY - 14 * 3, 24 * 3, 14 * 3);
     };
     Animal.prototype.onHit = function () {
         var angle = Math.atan2(this.game.player.y - this.y, this.game.player.x - this.x);

@@ -42,11 +42,21 @@ var Blood = /** @class */ (function (_super) {
     function Blood() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.emittedByPlayer = false;
+        _this.goingToEnemy = null;
         return _this;
     }
     Blood.prototype.update = function (delta) {
         this.x += this.velX * delta;
         this.y += this.velY * delta;
+        if (this.goingToEnemy !== null) {
+            var angle = Math.atan2(this.goingToEnemy.y - 20 - this.y, this.goingToEnemy.x - this.x);
+            this.velX += Math.cos(angle) * 0.3;
+            this.velY += Math.sin(angle) * 0.3;
+            var dist_1 = Math.sqrt(Math.pow((this.goingToEnemy.x - this.x), 2) + Math.pow((this.goingToEnemy.y - this.y), 2));
+            if (dist_1 < 20) {
+                return true;
+            }
+        }
         if (this.emittedByPlayer) {
             var angle = Math.atan2(this.game.temple.y - this.y, this.game.temple.x - this.x);
             this.velX += Math.cos(angle) * 0.3;
@@ -58,16 +68,16 @@ var Blood = /** @class */ (function (_super) {
             }
         }
         var dist = Math.sqrt(Math.pow((this.game.player.x - this.x), 2) + Math.pow((this.game.player.y - this.y), 2));
-        if (dist < 20 && !this.emittedByPlayer) {
+        if (dist < 20 && !this.emittedByPlayer && !this.goingToEnemy) {
             this.game.player.blood += 1;
             return true;
         }
-        if (dist < 50 && !this.emittedByPlayer) {
+        if (dist < 50 && !this.emittedByPlayer && !this.goingToEnemy) {
             var angle = Math.atan2(this.game.player.y - this.y, this.game.player.x - this.x);
             this.velX += Math.cos(angle) * 0.3;
             this.velY += Math.sin(angle) * 0.3;
         }
-        else {
+        else if (!this.goingToEnemy) {
             this.velY += 0.15 * delta;
         }
         if (this.y > this.game.world.getHeightAtPos(this.x) && !this.emittedByPlayer) {
@@ -100,7 +110,7 @@ var FontParticle = /** @class */ (function (_super) {
             this.x = this.startX + (this.endX - this.startX) * Math.min(this.framesLived, 30) / 30;
             this.y = this.startY + (this.endY - this.startY) * Math.min(this.framesLived, 30) / 30;
         }
-        if (this.framesLived > 120 + this.fadeAfter) {
+        if (this.framesLived > 120 + this.fadeAfter && this.game.started) {
             if (!this.hasUpdated) {
                 this.velX = Math.random() * 2;
                 this.velY = Math.random() * -2;

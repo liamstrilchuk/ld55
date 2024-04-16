@@ -2,12 +2,11 @@ class Wall {
 	static readonly width = 44;
 	static readonly height = 120;
 	static readonly cost = 50;
-	
+
 	public x: number;
 	public y: number;
 	private game: Game;
 	public pieces: WallPiece[] = [];
-	public framesSinceStart: number = 0;
 
 	constructor(x: number, y: number, game: Game) {
 		this.x = x;
@@ -26,7 +25,7 @@ class Wall {
 				}
 				const addTime = Math.floor(Math.random() * 60) + 2;
 				this.pieces.push(new WallPiece(
-					this.x + col * 4, this.y - row * 4,
+					this.x + col * 4, this.y - row * 4, 4, 4,
 					color, addTime, this.game
 				));
 			}
@@ -46,7 +45,6 @@ class Wall {
 	}
 
 	public render(): void {
-		this.framesSinceStart++;
 		this.pieces.forEach((piece) => piece.render());
 
 		this.game.ctx.fillStyle = "rgb(50, 50, 50)";
@@ -62,11 +60,15 @@ class WallPiece {
 	public framesLived: number = 0;
 	public color: string;
 	public addTime: number;
+	public width: number;
+	public height: number;
 	private game: Game;
 
-	constructor(x: number, y: number, color: string, addTime: number, game: Game) {
+	constructor(x: number, y: number, width: number, height: number,color: string, addTime: number, game: Game) {
 		this.x = x;
 		this.y = y;
+		this.width = width;
+		this.height = height;
 		this.game = game;
 		this.color = color;
 		this.addTime = addTime;
@@ -86,6 +88,6 @@ class WallPiece {
 		this.framesLived++;
 
 		this.game.ctx.fillStyle = this.color;
-		this.game.ctx.fillRect(x - this.game.relativeX, y - this.game.relativeY, 5, 5);
+		this.game.ctx.fillRect(x - this.game.relativeX, y - this.game.relativeY, this.width + 1, this.height + 1);
 	}
 }

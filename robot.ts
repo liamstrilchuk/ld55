@@ -15,6 +15,7 @@ class Robot {
 
 	public modeChangeTimer: number = 0;
 	public mode: "patrol" | "follow" = "patrol";
+	public asset: HTMLImageElement;
 
 	constructor(x: number, y: number, game: Game) {
 		this.x = x;
@@ -22,16 +23,16 @@ class Robot {
 		this.game = game;
 
 		this.setNewTarget();
+		this.asset = loadImage("assets/robot1.png");
 	}
 
 	private setNewTarget(): void {
-		this.targetX = Math.random() * 1000 - 500;
+		this.targetX = Math.random() * 2000 - 1000;
 		this.targetY = this.game.world.getHeightAtPos(this.targetX) - 250;
 	}
 
 	public render(): void {
-		this.game.ctx.fillStyle = "rgb(70, 70, 70)";
-		this.game.ctx.fillRect(this.x - this.game.relativeX - 10, this.y - this.game.relativeY - 10, 20, 20);
+		this.game.ctx.drawImage(this.asset, this.x - this.game.relativeX - 19 * 2, this.y - this.game.relativeY - 18 * 1, 38 * 2, 18 * 2);
 
 		if (this.modeChangeTimer > 0) {
 			this.game.ctx.font = "12px Times";
@@ -80,7 +81,7 @@ class Robot {
 				return false;
 			}
 
-			const angle = Math.atan2((min.y - 20) - this.y, min.x - this.x);
+			const angle = Math.atan2((min.y - 20) - this.y, min.x - this.x) + Math.random() * Math.PI / 8 - Math.PI / 16;
 			this.game.bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * 10, Math.sin(angle) * 10, 0, this.game));
 			this.reloadTime = this.maxReloadTime;
 		}

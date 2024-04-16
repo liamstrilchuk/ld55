@@ -1,7 +1,6 @@
 var Wall = /** @class */ (function () {
     function Wall(x, y, game) {
         this.pieces = [];
-        this.framesSinceStart = 0;
         this.x = x;
         this.y = y;
         this.game = game;
@@ -15,7 +14,7 @@ var Wall = /** @class */ (function () {
                     color = "rgb(90, 50, 50)";
                 }
                 var addTime = Math.floor(Math.random() * 60) + 2;
-                this.pieces.push(new WallPiece(this.x + col * 4, this.y - row * 4, color, addTime, this.game));
+                this.pieces.push(new WallPiece(this.x + col * 4, this.y - row * 4, 4, 4, color, addTime, this.game));
             }
         }
     };
@@ -30,7 +29,6 @@ var Wall = /** @class */ (function () {
         return false;
     };
     Wall.prototype.render = function () {
-        this.framesSinceStart++;
         this.pieces.forEach(function (piece) { return piece.render(); });
         this.game.ctx.fillStyle = "rgb(50, 50, 50)";
         this.game.ctx.fillRect(this.x - this.game.relativeX, this.y - this.game.relativeY + 4, Wall.width + 1, 50);
@@ -41,12 +39,14 @@ var Wall = /** @class */ (function () {
     return Wall;
 }());
 var WallPiece = /** @class */ (function () {
-    function WallPiece(x, y, color, addTime, game) {
+    function WallPiece(x, y, width, height, color, addTime, game) {
         this.startX = 0;
         this.startY = 0;
         this.framesLived = 0;
         this.x = x;
         this.y = y;
+        this.width = width;
+        this.height = height;
         this.game = game;
         this.color = color;
         this.addTime = addTime;
@@ -64,7 +64,7 @@ var WallPiece = /** @class */ (function () {
         var y = this.startY + (this.y - this.startY) * Math.min(60, this.framesLived - this.addTime) / 60;
         this.framesLived++;
         this.game.ctx.fillStyle = this.color;
-        this.game.ctx.fillRect(x - this.game.relativeX, y - this.game.relativeY, 5, 5);
+        this.game.ctx.fillRect(x - this.game.relativeX, y - this.game.relativeY, this.width + 1, this.height + 1);
     };
     return WallPiece;
 }());

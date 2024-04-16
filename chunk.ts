@@ -43,8 +43,10 @@ class Chunk {
 				spots.push(Math.floor(Math.pow(Math.random() * 100000, 0.45) / 4) * 4);
 			}
 
+			const overallHeight = (h1 * 0.7 + h2 * 0.3) * Math.min(Math.abs(x * 4 + this.x * 600) / 900, 1.5);
+
 			this.tileHeightData.push({
-				height: Math.floor((h1 * 0.7 + h2 * 0.3) / 4) * 4,
+				height: Math.floor(overallHeight / 4) * 4,
 				spots: spots
 			});
 		}

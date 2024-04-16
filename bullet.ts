@@ -31,18 +31,18 @@ class Bullet {
 		}
 
 		[...this.game.enemies, ...this.game.animals].forEach((enemy) => {
-			if (Math.abs(enemy.x - this.x) < 10 && Math.abs((enemy.y - 20) - this.y) < 20 && !this.enemiesHit.includes(enemy)) {
+			if (Math.abs(enemy.x - this.x) < 20 && Math.abs((enemy.y - 20) - this.y) < 30 && !this.enemiesHit.includes(enemy)) {
 				enemy.health -= 10;
 				this.enemiesHit.push(enemy);
 				enemy.onHit();
 
 				if (enemy.health <= 0) {
-					for (let i = 0; i < 15; i++) {
+					for (let i = 0; i < Math.ceil(10 / Math.pow(this.game.wave, 0.5)); i++) {
 						const angle = Math.atan2(-this.velY, -this.velX) + Math.PI * 2 - Math.PI * Math.random();
 						this.game.particles.push(new Blood(this.x - this.velX * delta, this.y - this.velY * delta, Math.cos(angle) * 2, Math.sin(angle) * 3, this.game));
 					}
 				} else {
-					for (let i = 0; i < 4; i++) {
+					for (let i = 0; i < Math.ceil(3 / Math.pow(this.game.wave, 0.3)); i++) {
 						const angle = Math.atan2(-this.velY, -this.velX) + Math.PI * 2 - Math.PI * Math.random();
 						this.game.particles.push(new Blood(this.x - this.velX * delta, this.y - this.velY * delta, Math.cos(angle) * 2, Math.sin(angle) * 3, this.game));
 					}
@@ -50,7 +50,7 @@ class Bullet {
 			}
 		});
 
-		return false;
+		return this.enemiesHit.length > 0;
 	}
 
 	public render(): void {
@@ -80,6 +80,14 @@ class EnemyBullet extends Bullet {
 				return;
 			}
 
+			if (structure instanceof Turret) {
+				if (Math.abs(this.x - structure.x) < Turret.width / 2) {
+					structure.health -= 10;
+					hasHit = true;
+				}
+				return;
+			}
+
 			for (let i = structure.pieces.length - 1; i > -1; i--) {
 				const piece = structure.pieces[i];
 				if (Math.sqrt((piece.x + 2 - this.x) ** 2 + (piece.y + 2 - this.y) ** 2) < 15) {
@@ -89,6 +97,16 @@ class EnemyBullet extends Bullet {
 				}
 			}
 		});
+
+		if (Math.abs(this.x - this.game.player.x) < 20 && Math.abs(this.y - this.game.player.y) < 64) {
+			this.game.player.health -= 10;
+			hasHit = true;
+			if (this.game.player.health <= 0) {
+				this.game.player.x = 0;
+				this.game.player.y = -200;
+				this.game.player.health = 100;
+			}
+		}
 
 		return hasHit;
 	}

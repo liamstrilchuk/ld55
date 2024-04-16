@@ -36,10 +36,22 @@ class Particle {
 
 class Blood extends Particle {
 	public emittedByPlayer: boolean = false;
+	public goingToEnemy: Enemy = null;
 
 	public update(delta: number): boolean {
 		this.x += this.velX * delta;
 		this.y += this.velY * delta;
+
+		if (this.goingToEnemy !== null) {
+			const angle = Math.atan2(this.goingToEnemy.y - 20 - this.y, this.goingToEnemy.x - this.x);
+			this.velX += Math.cos(angle) * 0.3;
+			this.velY += Math.sin(angle) * 0.3;
+			const dist = Math.sqrt((this.goingToEnemy.x - this.x) ** 2 + (this.goingToEnemy.y - this.y) ** 2);
+
+			if (dist < 20) {
+				return true;
+			}
+		}
 
 		if (this.emittedByPlayer) {
 			const angle = Math.atan2(this.game.temple.y - this.y, this.game.temple.x - this.x);
@@ -55,16 +67,16 @@ class Blood extends Particle {
 
 		const dist = Math.sqrt((this.game.player.x - this.x) ** 2 + (this.game.player.y - this.y) ** 2);
 
-		if (dist < 20 && !this.emittedByPlayer) {
+		if (dist < 20 && !this.emittedByPlayer && !this.goingToEnemy) {
 			this.game.player.blood += 1;
 			return true;
 		}
 
-		if (dist < 50 && !this.emittedByPlayer) {
+		if (dist < 50 && !this.emittedByPlayer && !this.goingToEnemy) {
 			const angle = Math.atan2(this.game.player.y - this.y, this.game.player.x - this.x);
 			this.velX += Math.cos(angle) * 0.3;
 			this.velY += Math.sin(angle) * 0.3;
-		} else {
+		} else if (!this.goingToEnemy) {
 			this.velY += 0.15 * delta;
 		}
 
@@ -107,7 +119,7 @@ class FontParticle extends Particle {
 			this.y = this.startY + (this.endY - this.startY) * Math.min(this.framesLived, 30) / 30;
 		}
 
-		if (this.framesLived > 120 + this.fadeAfter) {
+		if (this.framesLived > 120 + this.fadeAfter && this.game.started) {
 			if (!this.hasUpdated) {
 				this.velX = Math.random() * 2;
 				this.velY = Math.random() * -2;

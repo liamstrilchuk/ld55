@@ -45,25 +45,25 @@ var Bullet = /** @class */ (function () {
             return true;
         }
         __spreadArray(__spreadArray([], this.game.enemies, true), this.game.animals, true).forEach(function (enemy) {
-            if (Math.abs(enemy.x - _this.x) < 10 && Math.abs((enemy.y - 20) - _this.y) < 20 && !_this.enemiesHit.includes(enemy)) {
+            if (Math.abs(enemy.x - _this.x) < 20 && Math.abs((enemy.y - 20) - _this.y) < 30 && !_this.enemiesHit.includes(enemy)) {
                 enemy.health -= 10;
                 _this.enemiesHit.push(enemy);
                 enemy.onHit();
                 if (enemy.health <= 0) {
-                    for (var i = 0; i < 15; i++) {
+                    for (var i = 0; i < Math.ceil(10 / Math.pow(_this.game.wave, 0.5)); i++) {
                         var angle = Math.atan2(-_this.velY, -_this.velX) + Math.PI * 2 - Math.PI * Math.random();
                         _this.game.particles.push(new Blood(_this.x - _this.velX * delta, _this.y - _this.velY * delta, Math.cos(angle) * 2, Math.sin(angle) * 3, _this.game));
                     }
                 }
                 else {
-                    for (var i = 0; i < 4; i++) {
+                    for (var i = 0; i < Math.ceil(3 / Math.pow(_this.game.wave, 0.3)); i++) {
                         var angle = Math.atan2(-_this.velY, -_this.velX) + Math.PI * 2 - Math.PI * Math.random();
                         _this.game.particles.push(new Blood(_this.x - _this.velX * delta, _this.y - _this.velY * delta, Math.cos(angle) * 2, Math.sin(angle) * 3, _this.game));
                     }
                 }
             }
         });
-        return false;
+        return this.enemiesHit.length > 0;
     };
     Bullet.prototype.render = function () {
         this.game.ctx.fillStyle = "rgb(70, 70, 70)";
@@ -93,6 +93,13 @@ var EnemyBullet = /** @class */ (function (_super) {
             if (Math.abs(structure.x - _this.x) > 50) {
                 return;
             }
+            if (structure instanceof Turret) {
+                if (Math.abs(_this.x - structure.x) < Turret.width / 2) {
+                    structure.health -= 10;
+                    hasHit = true;
+                }
+                return;
+            }
             for (var i = structure.pieces.length - 1; i > -1; i--) {
                 var piece = structure.pieces[i];
                 if (Math.sqrt(Math.pow((piece.x + 2 - _this.x), 2) + Math.pow((piece.y + 2 - _this.y), 2)) < 15) {
@@ -102,6 +109,15 @@ var EnemyBullet = /** @class */ (function (_super) {
                 }
             }
         });
+        if (Math.abs(this.x - this.game.player.x) < 20 && Math.abs(this.y - this.game.player.y) < 64) {
+            this.game.player.health -= 10;
+            hasHit = true;
+            if (this.game.player.health <= 0) {
+                this.game.player.x = 0;
+                this.game.player.y = -200;
+                this.game.player.health = 100;
+            }
+        }
         return hasHit;
     };
     return EnemyBullet;

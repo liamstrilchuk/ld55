@@ -14,13 +14,22 @@ var Player = /** @class */ (function () {
         this.holdingTime = 0;
         this.blood = 0;
         this.framesSinceSwimming = 0;
+        this.lastDir = "right";
+        this.health = 100;
         this.x = x;
         this.y = y;
         this.game = game;
+        this.assets = {
+            right: [
+                loadImage("assets/player1.png")
+            ],
+            left: [
+                loadImage("assets/player2.png")
+            ]
+        };
     }
     Player.prototype.render = function () {
-        this.game.ctx.fillStyle = "rgb(70, 70, 70)";
-        this.game.ctx.fillRect(this.x - this.game.relativeX - 10, this.y - this.game.relativeY - 40, 20, 40);
+        this.game.ctx.drawImage(this.assets[this.lastDir][0], this.x - this.game.relativeX - 20, this.y - this.game.relativeY - 64, 40, 64);
     };
     Player.prototype.update = function (delta) {
         var _this = this;
@@ -33,11 +42,13 @@ var Player = /** @class */ (function () {
             }
         });
         var isInLake = lakeHeight !== null && Math.abs(lakeHeight - this.y) < 10;
-        if (this.game.keys["a"]) {
+        if (this.game.keys["a"] && this.x > -8000) {
             this.x -= (isInLake ? 2 : 4) * delta;
+            this.lastDir = "left";
         }
-        if (this.game.keys["d"]) {
+        if (this.game.keys["d"] && this.x < 8000) {
             this.x += (isInLake ? 2 : 4) * delta;
+            this.lastDir = "right";
         }
         if (this.game.keys[" "] && !swimming && this.velocityY === 0) {
             this.velocityY = -10;
@@ -66,9 +77,9 @@ var Player = /** @class */ (function () {
         if (this.game.mouseDown) {
             this.holdingTime += delta;
         }
-        if (this.wasHoldingLastFrame && !this.game.mouseDown && this.holdingTime > 10) {
+        if (this.wasHoldingLastFrame && !this.game.mouseDown) {
             var dir = Math.atan2(this.game.mousePos.y - this.y + this.game.relativeY, this.game.mousePos.x - this.x + this.game.relativeX);
-            this.game.bullets.push(new Bullet(this.x, this.y - 30, Math.cos(dir) * Math.min(this.holdingTime, 30) / 2, Math.sin(dir) * Math.min(this.holdingTime, 30) / 2, 0.1, this.game));
+            this.game.bullets.push(new Bullet(this.x, this.y - 30, Math.cos(dir) * Math.min(this.holdingTime + 15, 40) / 2, Math.sin(dir) * Math.min(this.holdingTime + 15, 40) / 2, 0.1, this.game));
             this.holdingTime = 0;
         }
         if (this.wasHoldingLastFrame && !this.game.mouseDown) {

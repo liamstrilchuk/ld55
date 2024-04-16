@@ -8,10 +8,18 @@ class Animal {
 	public health: number = 20;
 	private game: Game;
 
+	public assets: { [key: string]: HTMLImageElement };
+	public lastDir: string = Math.random() < 0.5 ? "left" : "right";
+
 	constructor(x: number, y: number, game: Game) {
 		this.x = x;
 		this.y = y;
 		this.game = game;
+
+		this.assets = {
+			"left": loadImage("assets/animal1.png"),
+			"right": loadImage("assets/animal2.png")
+		};
 	}
 
 	public update(delta: number): boolean {
@@ -39,10 +47,12 @@ class Animal {
 
 		if (this.targetX < this.x) {
 			this.x -= (isInLake ? 1 : 2) * delta;
+			this.lastDir = "left";
 		}
 
 		if (this.targetX > this.x) {
 			this.x += (isInLake ? 1 : 2) * delta;
+			this.lastDir = "right";
 		}
 
 		if ((!swimming && isInLake && this.framesSinceSwimming < 5) || swimming && this.framesSinceSwimming > 10) {
@@ -72,8 +82,7 @@ class Animal {
 	}
 
 	public render(): void {
-		this.game.ctx.fillStyle = "rgb(70, 70, 70)";
-		this.game.ctx.fillRect(this.x - this.game.relativeX - 20, this.y - this.game.relativeY - 20, 40, 20);
+		this.game.ctx.drawImage(this.assets[this.lastDir], this.x - this.game.relativeX - 24 * 1.5, this.y - this.game.relativeY - 14 * 3, 24 * 3, 14 * 3);
 	}
 
 	public onHit(): void {

@@ -5,14 +5,22 @@ class Enemy {
 	public velocityY: number = 0;
 	public reloadTime: number = 0;
 	public maxReloadTime: number = 60;
+	public suckBloodTimer: number = 30;
+	public framesSinceSwimming: number = 0;
+	public lastDir: string = "left";
 
 	private game: Game;
+	public assets: { [key: string]: HTMLImageElement };
 
 	constructor(x: number, y: number, game: Game) {
 		this.x = x;
 		this.y = y;
 		this.game = game;
 		this.health = 30;
+		this.assets = {
+			"left": loadImage("assets/enemy2.png"),
+			"right": loadImage("assets/enemy1.png")
+		};
 	}
 
 	public update(delta: number): boolean {
@@ -32,15 +40,43 @@ class Enemy {
 			}
 		});
 
+		let swimming = false;
+		let lakeHeight = null;
+
+		[...this.game.world.getChunkAtPos(this.x).lakes, ...this.game.world.getChunkAtPos(this.x - 600).lakes].forEach((lake) => {
+			if (this.x >= lake.from && this.x <= lake.to) {
+				swimming = this.y > lake.maxLakeHeight;
+				lakeHeight = lake.maxLakeHeight;
+			}
+		});
+
+		const isInLake = lakeHeight !== null && Math.abs(lakeHeight - this.y) < 10;
+
 		if (this.game.temple.x < this.x && Math.abs(this.game.temple.x - this.x) > 130 && nearestLeft > 80) {
-			this.x -= 1.5 * delta;
+			this.x -= (isInLake ? 0.75 : 1.5) * delta;
+			this.lastDir = "left";
 		}
 
 		if (this.game.temple.x > this.x && Math.abs(this.game.temple.x - this.x) > 130 && nearestRight > 90) {
-			this.x += 1.5 * delta;
+			this.x += (isInLake ? 0.75 : 1.5) * delta;
+			this.lastDir = "right";
 		}
 
-		this.velocityY += 0.7 * delta;
+		if ((!swimming && isInLake && this.framesSinceSwimming < 5) || swimming && this.framesSinceSwimming > 10) {
+			for (let i = 0; i < 3; i++) {
+				const angle = Math.PI + Math.random() * Math.PI;
+				this.game.particles.push(new Particle(this.x, this.y, Math.cos(angle) * 2, Math.sin(angle) * 2, this.game, "rgb(0, 0, 200)"));
+			}
+		}
+
+		this.framesSinceSwimming = swimming ? 0 : this.framesSinceSwimming + 1;
+
+		if (!swimming) {
+			this.velocityY += (isInLake ? 0.4 : 0.7) * delta;
+		} else {
+			this.velocityY -= Math.abs(lakeHeight - this.y) / 80 * delta;
+			this.velocityY = Math.max(-1.5, this.velocityY);
+		}
 
 		if (this.y + this.velocityY > this.game.world.getHeightAtPos(this.x)) {
 			this.velocityY = 0;
@@ -49,9 +85,26 @@ class Enemy {
 			this.y += this.velocityY * delta;
 		}
 
+		this.suckBloodTimer -= delta;
+		if (this.suckBloodTimer <= 0 && Math.abs(this.x - this.game.temple.x) < 150 && this.game.temple.blood > -30) {
+			this.game.temple.blood -= 1;
+			const particle = new Blood(this.game.temple.x, this.game.temple.y, 0, 0, this.game);
+			particle.goingToEnemy = this;
+			this.game.particles.push(particle);
+			this.suckBloodTimer = 30;
+		}
+
 		this.reloadTime -= delta;
 		if (this.reloadTime <= 0) {
-			let min: Wall, minDist = Infinity;
+			const playerDist = Math.abs(this.x - this.game.player.x);
+			if (playerDist < 400) {
+				const angle = Math.atan2(this.game.player.y - this.y, this.game.player.x - this.x);
+				this.game.bullets.push(new EnemyBullet(this.x, this.y - 20, Math.cos(angle) * 10, Math.sin(angle) * 10, 0, this.game));
+				this.reloadTime = this.maxReloadTime;
+				return false;
+			}
+
+			let min: Wall | Turret, minDist = Infinity;
 			this.game.structures.forEach((structure) => {
 				if (Math.abs(structure.x - this.x) < minDist) {
 					min = structure;
@@ -76,8 +129,7 @@ class Enemy {
 	}
 
 	public render(): void {
-		this.game.ctx.fillStyle = "rgb(70, 70, 70)";
-		this.game.ctx.fillRect(this.x - this.game.relativeX - 10, this.y - this.game.relativeY - 40, 20, 40);
+		this.game.ctx.drawImage(this.assets[this.lastDir], this.x - this.game.relativeX - 20, this.y - this.game.relativeY - 64, 40, 64);
 	}
 
 	public onHit(): void {}
