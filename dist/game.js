@@ -102,7 +102,7 @@ var Game = /** @class */ (function () {
         if (this.waveTimer <= 0) {
             this.wave++;
             this.waveTimer = 3600;
-            for (var i = 0; i < this.wave; i++) {
+            for (var i = 0; i < Math.pow(this.wave, 1.5); i++) {
                 var randX = void 0;
                 do {
                     randX = Math.random() * 5000 - 2500;

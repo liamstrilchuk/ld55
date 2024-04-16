@@ -136,7 +136,7 @@ class Game {
 			this.wave++;
 			this.waveTimer = 3600;
 
-			for (let i = 0; i < this.wave; i++) {
+			for (let i = 0; i < Math.pow(this.wave, 1.5); i++) {
 				let randX: number;
 				do {
 					randX = Math.random() * 5000 - 2500;
